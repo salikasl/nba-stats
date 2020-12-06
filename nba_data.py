@@ -24,7 +24,7 @@ def player_ids_for_team(id):
     id = base_team_id + id
     print(id)
     roster = commonteamroster.CommonTeamRoster(team_id=id).get_dict()
-    
+    print(roster)
     ids_and_names = []
     for player in roster['resultSets'][0]['rowSet']:
         if (player[-3] != 'R' and int(player[11]) >= 4):
@@ -55,6 +55,7 @@ def insert_player_stats(cur, conn):
                 steals.append(season[stat_index['STL']])
                 blocks.append(season[stat_index['BLK']])
 
+
             teams = ','.join(teams)
             points = ','.join(map(str, points))
             rebounds = ','.join(map(str, rebounds))
@@ -62,6 +63,8 @@ def insert_player_stats(cur, conn):
             three_percentages = ','.join(map(str, three_percentages))
             steals = ','.join(map(str, steals))
             blocks = ','.join(map(str, blocks))
+            print(teams)
+            print(points)
 
             cur.execute('INSERT INTO NBA (player_id, name, teams, points, rebounds, assists, three_percentages, steals, blocks) VALUES (?,?,?,?,?,?,?,?,?)', \
                 (id, name, teams, points, rebounds, assists, three_percentages, steals, blocks,))
@@ -71,8 +74,8 @@ def insert_player_stats(cur, conn):
         
 
 if __name__ == '__main__':
-    #cur, conn = set_up_database('stats.db')
-    #set_up_table(cur, conn)
-    #insert_player_stats(cur, conn)
+    cur, conn = set_up_database('stats.db')
+    set_up_table(cur, conn)
+    insert_player_stats(cur, conn)
 
     print(player_ids_for_team(0))
