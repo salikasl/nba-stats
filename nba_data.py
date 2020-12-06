@@ -14,7 +14,6 @@ def set_up_database(db_name):
     return cur, conn
 
 def set_up_table(cur, conn):
-    
     cur.execute('DROP TABLE IF EXISTS NBA')
     cur.execute('CREATE TABLE NBA (player_id INTEGER PRIMARY KEY, name TEXT, teams TEXT, points TEXT, rebounds TEXT, assists TEXT, three_percentages TEXT, steals TEXT, blocks TEXT)')
     conn.commit()
@@ -72,7 +71,7 @@ def insert_player_stats(cur, conn):
         
 
 if __name__ == '__main__':
-    #cur, conn = set_up_database('basketball.db')
+    #cur, conn = set_up_database('stats.db')
     #set_up_table(cur, conn)
     #insert_player_stats(cur, conn)
 
