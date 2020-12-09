@@ -4,8 +4,8 @@ import requests
 import sqlite3
 import os
 import json
+import plotly
 from nba_api.stats.endpoints import commonplayerinfo, playercareerstats, commonteamroster, teamplayerdashboard
-
 
 def set_up_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
