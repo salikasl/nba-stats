@@ -14,68 +14,63 @@ def set_up_database(db_name):
     return cur, conn
 
 def set_up_table(cur, conn):
-    cur.execute('DROP TABLE IF EXISTS NBA')
-    cur.execute('CREATE TABLE NBA (player_id INTEGER PRIMARY KEY, name TEXT, teams TEXT, points TEXT, rebounds TEXT, assists TEXT, three_percentages TEXT, steals TEXT, blocks TEXT)')
+    #cur.execute('DROP TABLE IF EXISTS NBA') #only if resetting the tables
+    cur.execute('CREATE TABLE IF NOT EXISTS NBA (player_id INTEGER PRIMARY KEY, season_id TEXT, team TEXT, points FLOAT, rebounds FLOAT, assists FLOAT, three_percentage FLOAT, steals FLOAT, blocks FLOAT)')
+    #cur.execute('DROP TABLE IF EXISTS players') #only if resetting the tables
+    cur.execute('CREATE TABLE IF NOT EXISTS players (player_id INTEGER, name TEXT, team_id INTEGER)')
     conn.commit()
 
-def player_ids_for_team(id):
-
-    base_team_id = 1610612737
-    id = base_team_id + id
-    print(id)
+def insert_players(cur, conn, id):
     roster = commonteamroster.CommonTeamRoster(team_id=id).get_dict()
-    print(roster)
-    ids_and_names = []
+    player_ids = []
+    names = []
     for player in roster['resultSets'][0]['rowSet']:
         if (player[-3] != 'R' and int(player[11]) >= 4):
-            ids_and_names.append((player[-1], player[3]))
+            player_ids.append(player[-1])
+            names.append(player[3])
 
-    return ids_and_names
+    for i in range(len(player_ids)):
+        cur.execute('INSERT INTO players (player_id, name, team_id) VALUES (?,?,?)', (player_ids[i], names[i], id))
+    conn.commit()
 
-def insert_player_stats(cur, conn):
-
-    stat_names = ["PLAYER_ID", "SEASON_ID", "LEAGUE_ID", "TEAM_ID", "TEAM_ABBREVIATION", "PLAYER_AGE", "GP", "GS", "MIN", "FGM",
+def insert_stats(cur, conn, team_id):
+    stat_names = ["PLAYER_ID", "SEASON_ID", "LEAGUE_ID", "TEAM_ID", "TEAM", "PLAYER_AGE", "GP", "GS", "MIN", "FGM",
     "FGA", "FG_PCT", "FG3M", "FG3A", "FG3_PCT", "FTM", "FTA", "FT_PCT", "OREB", "DREB", "REB", "AST", "STL", "BLK", "TOV", "PF", "PTS"]
-    stat_index = {stat_names[i]: i for i in range(len(stat_names))}
-
-    for i in range(15): 
-        team_id = i
-        players = player_ids_for_team(team_id)
-        for player in players:
-            id = player[0]
-            name = player[1]
-            stats = playercareerstats.PlayerCareerStats(player_id=id, per_mode36='PerGame').get_dict()
-            teams, points, rebounds, assists, three_percentages, steals, blocks = ([] for i in range(7))
-            for season in stats['resultSets'][0]['rowSet']:
-                teams.append(season[stat_index['TEAM_ABBREVIATION']])
-                points.append(season[stat_index['PTS']])
-                rebounds.append(season[stat_index['REB']])
-                assists.append(season[stat_index['AST']])
-                three_percentages.append(season[stat_index['FG3_PCT']])
-                steals.append(season[stat_index['STL']])
-                blocks.append(season[stat_index['BLK']])
-
-
-            teams = ','.join(teams)
-            points = ','.join(map(str, points))
-            rebounds = ','.join(map(str, rebounds))
-            assists = ','.join(map(str, assists))
-            three_percentages = ','.join(map(str, three_percentages))
-            steals = ','.join(map(str, steals))
-            blocks = ','.join(map(str, blocks))
-            print(teams)
-            print(points)
-
-            cur.execute('INSERT INTO NBA (player_id, name, teams, points, rebounds, assists, three_percentages, steals, blocks) VALUES (?,?,?,?,?,?,?,?,?)', \
-                (id, name, teams, points, rebounds, assists, three_percentages, steals, blocks,))
-        
+    index = {stat_names[i]: i for i in range(len(stat_names))}
+    
+    players = cur.execute('SELECT player_id, name FROM players WHERE team_id = (?)', (team_id,)).fetchall()
+    for player_id in players:
+        stats = playercareerstats.PlayerCareerStats(player_id=player_id, per_mode36='PerGame').get_dict()
+        for season in stats['resultSets'][0]['rowSet']:
+            cur.execute('INSERT INTO NBA (player_id, season_id, team, points, rebounds, assists, three_percentage, steals, blocks) \
+                VALUES (?,?,?,?,?,?,?,?,?)', (season[index['PLAYER_ID']], season[index['SEASON_ID']], season[index['TEAM']], season[index['PTS']], \
+                    season[index['REB']], season[index['AST']], season[index['FG3_PCT']], season[index['STL']], season[index['BLK']],))
         conn.commit()
 
+
+def update_database(cur, conn):
+
+    team_id = 1610612737
+    newteam = False
+    
+    while not newteam and team_id != 1610612767:
+        teamcheck = cur.execute('SELECT team_id FROM players WHERE team_id = (?)', (team_id,))
+        if (not len(teamcheck.fetchall())):
+            newteam = True
+        else:
+            team_id += 1
+
+    insert_players(cur, conn, team_id)
+    insert_stats(cur, conn, team_id)
+        
+    conn.commit()
         
 
 if __name__ == '__main__':
     cur, conn = set_up_database('stats.db')
     set_up_table(cur, conn)
-    insert_player_stats(cur, conn)
+    for i in range(2):
+        update_database(cur, conn)
+    
 
-    print(player_ids_for_team(0))
+    
