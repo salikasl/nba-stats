@@ -5,6 +5,9 @@ import sqlite3
 import os
 import json
 from nba_api.stats.endpoints import commonplayerinfo, playercareerstats, commonteamroster, teamplayerdashboard
+from sportsreference.ncaab.roster import Player
+from sportsreference.ncaab.teams import Teams
+from sportsreference.ncaab.roster import Roster
 
 
 def set_up_database(db_name):
@@ -18,12 +21,20 @@ def set_up_table(cur, conn):
     cur.execute('CREATE TABLE NBA (player_id INTEGER PRIMARY KEY, name TEXT, teams TEXT, points TEXT, rebounds TEXT, assists TEXT, three_percentages TEXT, steals TEXT, blocks TEXT)')
     conn.commit()
 
+def readDataFromFile(filename):
+    full_path = os.path.join(os.path.dirname(__file__), filename)
+    f = open(full_path, encoding='utf-8')
+    file_data = f.read()
+    f.close()
+    json_data = json.loads(file_data)
+    return json_data
+
 def player_ids_for_team(id):
     base_team_id = 1610612737
     id = base_team_id + id
-    print(id)
+    #print(id)
     roster = commonteamroster.CommonTeamRoster(team_id=id).get_dict()
-    print(roster)
+    #print(roster)
     ids_and_names = []
     for player in roster['resultSets'][0]['rowSet']:
         if (player[-3] != 'R' and int(player[11]) >= 4):
@@ -62,19 +73,53 @@ def insert_player_stats(cur, conn):
             three_percentages = ','.join(map(str, three_percentages))
             steals = ','.join(map(str, steals))
             blocks = ','.join(map(str, blocks))
-            print(teams)
-            print(points)
+            #print(teams)
+            #print(points)
 
             cur.execute('INSERT INTO NBA (player_id, name, teams, points, rebounds, assists, three_percentages, steals, blocks) VALUES (?,?,?,?,?,?,?,?,?)', \
                 (id, name, teams, points, rebounds, assists, three_percentages, steals, blocks,))
         
         conn.commit()
 
+def insertNCAAstats(cur,conn):
+    cur, conn = set_up_database('stats.db')
+    cur.execute("SELECT name from NBA")
+    nba_names = cur.fetchall()
+    print(nba_names)
+    cur.execute("DROP TABLE IF EXISTS NCAA")
+    cur.execute("CREATE TABLE NCAA (name TEXT, id TEXT, season STRING, assists FLOAT, blocks FLOAT, effective_field_goal_percentage FLOAT, field_goal_percentage FLOAT, free_throw_percentage FLOAT, minutes_played INTEGER, points INTEGER)")
+    schools = ['Michigan']
+    seasons = ['2017,2018,2019']
+    x = '2018'
+    teams = Teams()
+    for team in teams:
+        if team.name in schools: 
+            name = team.abbreviation 
+            roster = Roster(name,x,False)
+            for player in roster.players:
+                player_name = player.name
+                ids = player.player_id
+                season = x 
+                assists = player.assist_percentage
+                blocks = player.block_percentage
+                effective_fg = player.effective_field_goal_percentage
+                fg_percentage = player.field_goal_percentage
+                ft_percentage = player.free_throw_percentage
+                minutes = player.minutes_played
+                point = player.points
+                steal = player.steals
+                three_point_perc = player.three_point_percentage
+                true_shooting_perc = player.true_shooting_percentage
+                turnover_perc  = player.turnover_percentage
+                two_point_perc  = player.two_point_percentage
+                usage_perc = player.usage_percentage
+                cur.execute("INSERT INTO NCAA (name, id, season, assists, blocks, effective_field_goal_percentage, field_goal_percentage, free_throw_percentage, minutes_played, points) VALUES (?,?,?,?,?,?,?,?,?,?)",(player_name,ids,season,assists,blocks,effective_fg,fg_percentage,ft_percentage,minutes,point))
+    conn.commit()
         
 
 if __name__ == '__main__':
     cur, conn = set_up_database('stats.db')
     set_up_table(cur, conn)
     insert_player_stats(cur, conn)
-
-    print(player_ids_for_team(0))
+    insertNCAAstats(cur,conn)
+    #print(player_ids_for_team(0))
