@@ -31,31 +31,52 @@ def setUpDatabase(db_name):
 def insertNCAAstats(cur,conn):
     cur, conn = setUpDatabase('stats.db')
     cur.execute("DROP TABLE IF EXISTS NCAA")
-    cur.execute("CREATE TABLE NCAA (name TEXT, id TEXT, season STRING, assists FLOAT, blocks FLOAT, effective_field_goal_percentage FLOAT, field_goal_percentage FLOAT, free_throw_percentage FLOAT, minutes_played INTEGER, points INTEGER)")
-    schools = ['Michigan']
-    seasons = ['2017,2018,2019']
-    x = '2018'
+    cur.execute("CREATE TABLE NCAA (name TEXT, id TEXT, season STRING, points INTEGER, assists INTEGER, blocks INTEGER, steals INTEGER, field_goal_percentage FLOAT, three_point_percentage FLOAT, minutes_played INTEGER, games_played INTEGER)")
+    cur.execute("SELECT name FROM players")
+    NBA_names = cur.fetchall() 
+    name_list = [x[0] for x in NBA_names]
+    seasons = ['2010','2011','2012','2013','2014','2015','2016']
     teams = Teams()
     for team in teams:
-        if team.name in schools: 
-            name = team.abbreviation 
-            roster = Roster(name,x,False)
-            for player in roster.players:
-                player_name = player.name
-                ids = player.player_id
-                season = x 
-                assists = player.assist_percentage
-                blocks = player.block_percentage
-                effective_fg = player.effective_field_goal_percentage
-                fg_percentage = player.field_goal_percentage
-                ft_percentage = player.free_throw_percentage
-                minutes = player.minutes_played
-                point = player.points
-                steal = player.steals
-                three_point_perc = player.three_point_percentage
-                true_shooting_perc = player.true_shooting_percentage
-                turnover_perc  = player.turnover_percentage
-                two_point_perc  = player.two_point_percentage
-                usage_perc = player.usage_percentage
-                cur.execute("INSERT INTO NCAA (name, id, season, assists, blocks, effective_field_goal_percentage, field_goal_percentage, free_throw_percentage, minutes_played, points) VALUES (?,?,?,?,?,?,?,?,?,?)",(player_name,ids,season,assists,blocks,effective_fg,fg_percentage,ft_percentage,minutes,point))
-        conn.commit()
+        for x in seasons: 
+            try:
+                roster = Roster(team.abbreviation,x,False)
+                for player in roster.players:
+                    if player.name in name_list:
+                        print("Worked")
+                        player_name = player.name
+                        ids = player.player_id
+                        season = x 
+                        assist = player.assists
+                        block = player.blocks
+                        fg_percentage = player.field_goal_percentage
+                        minutes = player.minutes_played
+                        point = player.points
+                        steal = player.steals
+                        three_point_perc = player.three_point_percentage
+                        games_played = player.games_played
+                        cur.execute("INSERT INTO NCAA (name, id, season, points, assists, blocks, steals, field_goal_percentage, three_point_percentage, minutes_played, games_played) VALUES (?,?,?,?,?,?,?,?,?,?,?)",(player_name,ids,season,point,assist,block,steal,fg_percentage,three_point_perc,minutes,games_played))
+            except:
+                continue
+                 
+    conn.commit()
+
+def catch_error():
+    teams = Teams()
+    for _ in range(200):
+        try: 
+            for team in teams:
+                print("Works:"+team.name)
+        except:
+            print(team.name)
+            continue
+
+    
+    
+    
+def main():
+    cur,conn = setUpDatabase('stats.db')
+    insertNCAAstats(cur,conn)
+
+
+main() 
