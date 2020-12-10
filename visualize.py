@@ -2,7 +2,8 @@
 
 import sqlite3
 import os
-import plotly.graph_objects as go
+import plotly.express as px
+import pandas as pd
 
 def establish_connection(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
@@ -36,10 +37,11 @@ def get_nba_stats(cur, conn):
     return career_minutes, career_points, seasons_in_ncaa
 
 def scatter_plot(minutes, points, seasons):
+
+    seasons = map(str, seasons)
     
-    fig = go.FigureWidget(data=go.Scatter(y=[3,2,1]))
-    path = os.path.dirname(os.path.abspath(__file__))
-    fig.write_image(os.path.join(path, 'testing.png'))
+    fig = px.scatter(x=minutes, y=points, title='Points vs Minutes Played in the NBA', color=seasons, labels={'Points':'Minutes Played'})
+    fig.show()
 
 
 
