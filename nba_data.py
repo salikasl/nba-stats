@@ -4,7 +4,6 @@ import requests
 import sqlite3
 import os
 import json
-import plotly
 from nba_api.stats.endpoints import commonplayerinfo, playercareerstats, commonteamroster, teamplayerdashboard
 
 def set_up_database(db_name):
@@ -71,6 +70,8 @@ if __name__ == '__main__':
     set_up_table(cur, conn)
     for i in range(2):
         update_database(cur, conn)
+
+    #hello
     
 
     
