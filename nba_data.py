@@ -68,7 +68,7 @@ def update_database(cur, conn):
 if __name__ == '__main__':
     cur, conn = set_up_database('stats.db')
     set_up_table(cur, conn)
-    for i in range(2):
+    for i in range(3):
         update_database(cur, conn)
 
     
