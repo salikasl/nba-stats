@@ -32,7 +32,7 @@ def getPlayers(cur,conn):
     name_list = [x[0] for x in NBA_names]
     schools = getSchools()
     shared_names = []
-    seasons = ['2011','2012','2013','2014','2015','2016']
+    seasons = ['2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016']
     for team in schools:
             for x in seasons: 
                 roster = Roster(team,x,False)
