@@ -20,10 +20,7 @@ def set_up_table(cur, conn):
     cur.execute('CREATE TABLE IF NOT EXISTS players (player_id INTEGER, name TEXT, team_id INTEGER)')
     conn.commit()
 
-def player_ids_for_team(id):
-    base_team_id = 1610612737
-    id = base_team_id + id
-    print(id)
+def insert_players(cur, conn, id):
     roster = commonteamroster.CommonTeamRoster(team_id=id).get_dict()
     player_ids = []
     names = []
