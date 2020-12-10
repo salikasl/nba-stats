@@ -21,13 +21,6 @@ def setUpDatabase(db_name):
     cur = conn.cursor()
     return cur, conn
 
-#def create_table(data, cur,conn):
-
-
-#def main():
- #   cur, conn = setUpDatabase('stats.db')
-
-#main()
 def insertNCAAstats(cur,conn):
     cur, conn = setUpDatabase('stats.db')
     cur.execute("DROP TABLE IF EXISTS NCAA")
@@ -38,12 +31,11 @@ def insertNCAAstats(cur,conn):
     seasons = ['2010','2011','2012','2013','2014','2015','2016']
     teams = Teams()
     for team in teams:
-        for x in seasons: 
-            try:
+        try:
+            for x in seasons: 
                 roster = Roster(team.abbreviation,x,False)
                 for player in roster.players:
                     if player.name in name_list:
-                        print("Worked")
                         player_name = player.name
                         ids = player.player_id
                         season = x 
@@ -55,10 +47,11 @@ def insertNCAAstats(cur,conn):
                         steal = player.steals
                         three_point_perc = player.three_point_percentage
                         games_played = player.games_played
+                        print(player.name)
                         cur.execute("INSERT INTO NCAA (name, id, season, points, assists, blocks, steals, field_goal_percentage, three_point_percentage, minutes_played, games_played) VALUES (?,?,?,?,?,?,?,?,?,?,?)",(player_name,ids,season,point,assist,block,steal,fg_percentage,three_point_perc,minutes,games_played))
-            except:
-                continue
-                 
+                        print('done')
+        except:
+            continue             
     conn.commit()
 
 def catch_error():
