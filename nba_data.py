@@ -15,7 +15,7 @@ def set_up_database(db_name):
 def set_up_table(cur, conn):
     #cur.execute('DROP TABLE IF EXISTS NBA') #only if resetting the tables
     #cur.execute('DROP TABLE IF EXISTS players') #only if resetting the tables
-    cur.execute('CREATE TABLE IF NOT EXISTS NBA (player_id INTEGER PRIMARY KEY, season_id TEXT, team TEXT, points FLOAT, rebounds FLOAT, assists FLOAT, field_goal_percentage FLOAT, three_percentage FLOAT, steals FLOAT, blocks FLOAT)')
+    cur.execute('CREATE TABLE IF NOT EXISTS NBA (player_id INTEGER PRIMARY KEY, season_id TEXT, team TEXT, minutes FLOAT, points FLOAT, rebounds FLOAT, assists FLOAT, field_goal_percentage FLOAT, three_percentage FLOAT, steals FLOAT, blocks FLOAT)')
     cur.execute('CREATE TABLE IF NOT EXISTS players (player_id INTEGER, name TEXT, team_id INTEGER)')
     conn.commit()
 
@@ -41,8 +41,8 @@ def insert_stats(cur, conn, team_id):
     for player_id in players:
         stats = playercareerstats.PlayerCareerStats(player_id=player_id, per_mode36='PerGame').get_dict()
         for season in stats['resultSets'][0]['rowSet']:
-            cur.execute('INSERT INTO NBA (player_id, season_id, team, points, rebounds, assists, field_goal_percentage, three_percentage, steals, blocks) \
-                VALUES (?,?,?,?,?,?,?,?,?,?)', (season[index['PLAYER_ID']], season[index['SEASON_ID']], season[index['TEAM']], season[index['PTS']], \
+            cur.execute('INSERT INTO NBA (player_id, season_id, team, minutes, points, rebounds, assists, field_goal_percentage, three_percentage, steals, blocks) \
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)', (season[index['PLAYER_ID']], season[index['SEASON_ID']], season[index['TEAM']], season[index['MIN']], season[index['PTS']], \
                     season[index['REB']], season[index['AST']], season[index['FG_PCT']], season[index['FG3_PCT']], season[index['STL']], season[index['BLK']],))
         conn.commit()
 
