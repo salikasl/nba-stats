@@ -25,22 +25,33 @@ def get_nba_stats(cur, conn):
 
     for player in players:
         nba_seasons = cur.execute('SELECT NBA.minutes, NBA.points FROM NBA JOIN players ON NBA.player_id = players.player_id WHERE players.name = (?)', (player,)).fetchall()
-        print(nba_seasons)
         minutes_avg = sum(season[0] for season in nba_seasons)
         career_minutes.append(minutes_avg/len(nba_seasons))
         points_avg = sum(season[1] for season in nba_seasons)
         career_points.append(points_avg/len(nba_seasons))
         ncaa_seasons = cur.execute('SELECT name FROM NCAA WHERE name = (?)', (player,)).fetchall()
-        print(ncaa_seasons)
         seasons_in_ncaa.append(len(ncaa_seasons))
 
     return career_minutes, career_points, seasons_in_ncaa
 
+def write_data(minutes, points, seasons):
+    with open('scatter_data.txt', 'w') as f:
+        print('Minutes'.ljust(10), 'Points'.ljust(10), 'NCAA # of Seasons', file=f)
+        for (minute, pts, szn) in zip(minutes, points, seasons):
+            print(str(round(minute, 3)).ljust(10), str(round(pts, 3)).ljust(10), str(round(szn, 3)).ljust(10), file=f)
+
 def scatter_plot(minutes, points, seasons):
 
-    seasons = map(str, seasons)
+    seasons = list(map(str, seasons))
+
+    data = {
+        'minutes':minutes,
+        'points':points,
+        'seasons':seasons
+    }
     
-    fig = px.scatter(x=minutes, y=points, title='Points vs Minutes Played in the NBA', color=seasons, labels={'Points':'Minutes Played'})
+    df = pd.DataFrame (data, columns= ['minutes','points','seasons'])
+    fig = px.scatter(df, x='minutes', y='points', title='Points vs Minutes Played in the NBA', color='seasons', labels={'minutes':'Minutes Played','points':'Points','seasons':'Seasons in the NCAA'})
     fig.show()
 
 
@@ -48,4 +59,6 @@ def scatter_plot(minutes, points, seasons):
 if __name__ == '__main__':
     cur, conn = establish_connection('stats.db')
     minutes, points, num_seasons = get_nba_stats(cur, conn)
+    write_data(minutes, points, num_seasons)
     scatter_plot(minutes, points, num_seasons)
+    
