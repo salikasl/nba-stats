@@ -2,6 +2,7 @@ import requests
 import json
 import os
 import sqlite3
+import plotly 
 import plotly.express as px
 import pandas as pd 
 from sportsreference.ncaab.roster import Player, Roster
@@ -25,7 +26,7 @@ def setUpDatabase(db_name):
 
 def setUpTable(cur,conn):
     cur.execute("DROP TABLE IF EXISTS NCAA")
-    cur.execute("CREATE TABLE NCAA (name TEXT, id TEXT, season STRING, total_points INTEGER, points FLOAT, assists FLOAT, rebounds FLOAT, blocks FLOAT, steals FLOAT, field_goal_percentage FLOAT, three_point_percentage FLOAT, minutes_played INTEGER, points_per_minute FLOAT)")
+    cur.execute("CREATE TABLE NCAA (name TEXT, id TEXT, season STRING, total_points INTEGER, points FLOAT, assists FLOAT, rebounds FLOAT, blocks FLOAT, steals FLOAT, field_goal_percentage FLOAT, three_point_percentage FLOAT, minutes FLOAT, points_per_minute FLOAT)")
 
 def getPlayers(cur,conn):
     cur.execute("SELECT name FROM players")
@@ -59,24 +60,34 @@ def insertNCAAstats(cur,conn):
         rebound = player(season).total_rebounds/games_played
         block = player(season).blocks/games_played
         fg_percentage = player(season).field_goal_percentage
-        minutes = player(season).minutes_played
+        minutes = player(season).minutes_played/games_played
         total_points = player(season).points
         point = player(season).points/games_played
         steal = player(season).steals/games_played
         three_point_perc = player(season).three_point_percentage 
         points_per_minute = player(season).points/minutes                 
-        cur.execute("INSERT INTO NCAA (name, id, season, total_points, points, assists, rebounds, blocks, steals, field_goal_percentage, three_point_percentage, minutes_played,points_per_minute) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",(name,ids,season,total_points,point,assist,rebound,block,steal,fg_percentage,three_point_perc,minutes,points_per_minute,))
+        cur.execute("INSERT INTO NCAA (name, id, season, total_points, points, assists, rebounds, blocks, steals, field_goal_percentage, three_point_percentage, minutes,points_per_minute) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",(name,ids,season,total_points,point,assist,rebound,block,steal,fg_percentage,three_point_perc,minutes,points_per_minute,))
         conn.commit()
     
-def visualize(cur,conn):
-    df = pd.read_sql_query("SELECT * FROM NCAA",conn)
-    fig = px.line(df,x='season',y='points',color='name')
+def fix_table(cur,conn):
+    cur.execute("UPDATE NCAA SET season=(?) WHERE season=(?)", ("2009-10","201-1-10"))
+    conn.commit()
+
+def NCAA_vis(cur,conn):
+    df = pd.read_sql_query("SELECT * FROM NCAA WHERE minutes>30",conn)
+    fig = px.scatter(df,x='points',y='minutes',trendline='ols')
+    fig.show()
+
+def NBA_vis(cur,conn):
+    df = pd.read_sql_query("SELECT * FROM NBA WHERE minutes>30",conn)
+    fig = px.scatter(df,x='points',y='minutes',trendline='ols')
     fig.show()
 
 def main():
     cur,conn = setUpDatabase('stats.db')
-    setUpTable(cur,conn)
-    insertNCAAstats(cur,conn)
-    #visualize(cur,conn)
+    #setUpTable(cur,conn)
+    #insertNCAAstats(cur,conn)
+    NCAA_vis(cur,conn)
+    NBA_vis(cur,conn)
 
 main()
