@@ -34,6 +34,7 @@ def write_file(points,fg,seasons):
         print('Average Points'.ljust(10), 'AVG FG %'.ljust(10), 'NCAA # of Seasons', file=file1)
         for (point, field, season) in zip(points, fg, seasons):
             print(str(round(point, 2)).ljust(10), str(round(field, 2)).ljust(10), str(round(season, 3)).ljust(10), file=file1)
+    file1.close() 
 
 def NCAA_vis(points, fg, seasons):
     seasons = list(map(str, seasons))
@@ -43,7 +44,7 @@ def NCAA_vis(points, fg, seasons):
         'Seasons':seasons
     }
     df = pd.DataFrame (data, columns= ['Points','FG %','Seasons'])
-    fig = px.scatter(df, x='Points', y='FG %', trendline='ols',title='Average Points vs Field Goal %', color='Seasons', labels={'Points':'Average Points','FG %':'Average Field Goal %','seasons':'Seasons Played'})
+    fig = px.scatter(df, x='Points', y='FG %', trendline='ols',title='NCAA Player Average Points vs Field Goal %', color='Seasons', labels={'Points':'Average Points','FG %':'Average Field Goal %','seasons':'Seasons Played'})
     fig.show()
 
 def NBA_vis(cur,conn):
